@@ -31,7 +31,7 @@ void lerbit_oled_write_command(uint8_t cmd)
 void lerbit_oled_write_data(uint8_t data)
 {
   uint8_t twi_buf[2];
-  twi_buf[0] = 0x00; /* Control Byte */
+  twi_buf[0] = 0xC0; /* Control Byte */
   twi_buf[1] = data; /* Data Value */
 
 	twi_master_transfer(LERBIT_OLED_W, twi_buf, 2, 1);
@@ -46,7 +46,7 @@ void lerbit_oled_refresh_gram(void)
 		lerbit_oled_write_command(0x00);      //设置显示位置—列低地址
 		lerbit_oled_write_command(0x10);      //设置显示位置—列高地址
 		for(n = 0; n < 128; n++)
-      lerbit_oled_write_data(lerbit_oled_gram[n][i-4]);
+      lerbit_oled_write_data(lerbit_oled_gram[n][i]);
 	}
 }
 
@@ -144,34 +144,31 @@ void lerbit_oled_showstring(uint8_t x, uint8_t y, const uint8_t *p)
 
 void lerbit_oled_init(void)
 {
-	lerbit_oled_write_command(0xAE); 
-	lerbit_oled_write_command(0xD5); 
-	lerbit_oled_write_command(0x80); 
-	lerbit_oled_write_command(0xA8); 
-	lerbit_oled_write_command(0x1F); 
-	lerbit_oled_write_command(0xD3); 
-	lerbit_oled_write_command(0x00); 
 
-	lerbit_oled_write_command(0x40);
-
-	lerbit_oled_write_command(0x8D);
-	lerbit_oled_write_command(0x14);
-	lerbit_oled_write_command(0xA1);
-	lerbit_oled_write_command(0xC0);
-	lerbit_oled_write_command(0xDA);
-	lerbit_oled_write_command(0x02);
-	lerbit_oled_write_command(0x81);
-	lerbit_oled_write_command(0x68);
-
-	lerbit_oled_write_command(0xD9);
-	lerbit_oled_write_command(0xf1);
-	lerbit_oled_write_command(0xDB);
-	lerbit_oled_write_command(0x30);
-
-	lerbit_oled_write_command(0xA4);
-	lerbit_oled_write_command(0xA6);
-	lerbit_oled_write_command(0xAF);
-	lerbit_oled_clear();
+  lerbit_oled_write_command(0xAE); //Display OFF (sleep mode)
+  lerbit_oled_write_command(0xD5); //Set Display Clock Divide Ratio/Oscillator Frequency
+  lerbit_oled_write_command(0x80);
+  lerbit_oled_write_command(0xA8); //Set Multiplex Ratio
+  lerbit_oled_write_command(0x1F); //32
+  lerbit_oled_write_command(0xD3); //Set Display Offset
+  lerbit_oled_write_command(0x00);
+  lerbit_oled_write_command(0x40); //Set Display Start Line
+  lerbit_oled_write_command(0x8D); //Set Display Offset
+  lerbit_oled_write_command(0x14); //14h: Enable Charge Pump //10h: Disable Charge Pump
+  lerbit_oled_write_command(0xA1); //Set Segment Re-map
+  lerbit_oled_write_command(0xC0); //Set COM Output Scan Direction
+  lerbit_oled_write_command(0xDA); //Set COM Pins Hardware Configuration
+  lerbit_oled_write_command(0x02);
+  lerbit_oled_write_command(0x81); //Set Contrast Control
+  lerbit_oled_write_command(0x68);
+  lerbit_oled_write_command(0xD9); //Set Pre-charge Period
+  lerbit_oled_write_command(0xF1);
+  lerbit_oled_write_command(0xDB); //Set VCOMH Deselect Level
+  lerbit_oled_write_command(0x40);
+  lerbit_oled_write_command(0xA4); //Output follows RAM content
+  lerbit_oled_write_command(0xA6); //Set Normal Display
+  lerbit_oled_clear(); // Clear GRAM to clear display
+	lerbit_oled_write_command(0xAF); //Set Display ON (normal mode)
 }
 
 void lerbit_acc_reg_read(uint8_t reg_addr, uint8_t *reg_value)
@@ -209,42 +206,58 @@ static void leds_init(void)
 int main(void)
 {
   uint8_t data;
-	unsigned int loop = 2000000;
+	unsigned int loop = 3000000; // about 1s
 		
 	twi_master_init();
 	spi_master_init(SPI0, SPI_MODE3, 0);
 	
 	leds_init();
-	nrf_gpio_pin_set(LERBIT_APPLE_PWRO_PIN_NO); /* set PWRO */
 	
-	/* light leds */
-	nrf_gpio_pin_set(LERBIT_APPLE_LEDS_1_PIN_NO);
-	nrf_gpio_pin_set(LERBIT_APPLE_LEDS_2_PIN_NO);
-	nrf_gpio_pin_set(LERBIT_APPLE_LEDS_3_PIN_NO);
-	nrf_gpio_pin_set(LERBIT_APPLE_LEDS_4_PIN_NO);
-	
-	while(loop--) {}
-		
-	nrf_gpio_pin_clear(LERBIT_APPLE_LEDS_1_PIN_NO);
-	nrf_gpio_pin_clear(LERBIT_APPLE_LEDS_2_PIN_NO);
-	nrf_gpio_pin_clear(LERBIT_APPLE_LEDS_3_PIN_NO);
-	nrf_gpio_pin_clear(LERBIT_APPLE_LEDS_4_PIN_NO);
-
-#if 1
+	/* OLED RESET */
 	nrf_gpio_pin_set(LERBIT_OLED_RES_PIN);
-	loop = 160; /* 10us */
+	loop = 30; /* 10us */
 	while(loop--) {}
 	nrf_gpio_pin_clear(LERBIT_OLED_RES_PIN);
-	loop = 160; /* 10us */
+	loop = 30; /* 10us */
 	while(loop--) {}
 	nrf_gpio_pin_set(LERBIT_OLED_RES_PIN);
+  
   lerbit_oled_init();
 
-  lerbit_oled_showstring(12, 11, (const uint8_t *)"Lerbit Studio");
-  lerbit_oled_showstring(16, 37, (const uint8_t *)"Welcome You!");
-  lerbit_oled_refresh_gram(); 
-#endif
+  lerbit_oled_showstring(12, 0, (const uint8_t *)"Lerbit Studio");
+  lerbit_oled_showstring(16, 16, (const uint8_t *)"Welcome You!");
+  lerbit_oled_refresh_gram();
+	
+	/* light leds */
+	loop = 250000; /* 0.1s */
+	while(loop--) {}
+	nrf_gpio_pin_set(LERBIT_APPLE_LEDS_1_PIN_NO);
+	loop = 250000; /* 0.1s */
+	while(loop--) {}
+	nrf_gpio_pin_set(LERBIT_APPLE_LEDS_2_PIN_NO);
+	nrf_gpio_pin_clear(LERBIT_APPLE_LEDS_1_PIN_NO);
+	loop = 250000; /* 0.1s */
+	while(loop--) {}
+  nrf_gpio_pin_set(LERBIT_APPLE_LEDS_3_PIN_NO);
+	nrf_gpio_pin_clear(LERBIT_APPLE_LEDS_2_PIN_NO);
+	loop = 250000; /* 0.1s */
+	while(loop--) {}
+  nrf_gpio_pin_set(LERBIT_APPLE_LEDS_4_PIN_NO);
+	nrf_gpio_pin_clear(LERBIT_APPLE_LEDS_3_PIN_NO);
+	loop = 250000; /* 0.1s */
+	while(loop--) {}
+	nrf_gpio_pin_clear(LERBIT_APPLE_LEDS_4_PIN_NO);
+		
+	loop = 1500000; /* 1s */
+	while(loop--) {}
 
+	nrf_gpio_pin_set(LERBIT_APPLE_PWRO_PIN_NO); /* set PWRO */
+	
+	lerbit_oled_showstring(0, 0 * 16, (const uint8_t *)"0123456789ABCDEF");
+  lerbit_oled_showstring(0, 1 * 16, (const uint8_t *)"1123456789ABCDEF");
+  lerbit_oled_refresh_gram(); 
+
+		
   data = 0x00;
   lerbit_acc_reg_write(0x31, data);
   data = 0x08;
