@@ -415,91 +415,19 @@
         </Group>
         <Group>
           <GroupName>Services</GroupName>
-          <Files>
-            <File>
-              <FileName>ble_tps.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_tps.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_ias.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_ias.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_lls.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_lls.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_bas.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_ias_c.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_ias_c.c</FilePath>
-            </File>
-          </Files>
         </Group>
         <Group>
           <GroupName>Libraries</GroupName>
           <Files>
             <File>
-              <FileName>app_button.c</FileName>
+              <FileName>spi_master.c</FileName>
               <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\app_common\app_button.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\spi_master\spi_master.c</FilePath>
             </File>
             <File>
-              <FileName>app_gpiote.c</FileName>
+              <FileName>twi_hw_master.c</FileName>
               <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\app_common\app_gpiote.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_error_log.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_error_log.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_advdata.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_advdata.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_srv_common.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_srv_common.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_conn_params.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_conn_params.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_stack_handler.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_stack_handler.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_bondmngr.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_bondmngr.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_flash.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_flash.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_radio_notification.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_radio_notification.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_sensorsim.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_sensorsim.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\twi_master\twi_hw_master.c</FilePath>
             </File>
           </Files>
         </Group>
