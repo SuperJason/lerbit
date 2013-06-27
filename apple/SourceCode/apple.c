@@ -175,10 +175,9 @@ void lerbit_acc_reg_read(uint8_t reg_addr, uint8_t *reg_value)
 {
 	uint8_t spi_tx_data[2], spi_rx_data[2];
 
-
-  spi_tx_data[0] = reg_addr & 0x3F; 
+  spi_tx_data[0] = (reg_addr & 0x3F) | 0x80; 
   spi_tx_data[1] = 0x00;
-  spi_master_tx_rx((uint32_t *)NRF_SPI0, 2, spi_tx_data, spi_rx_data);	
+  spi_master_tx_rx((uint32_t *)NRF_SPI0, 2, spi_tx_data, spi_rx_data);
 
   *reg_value = spi_rx_data[1];
 }
@@ -203,10 +202,36 @@ static void leds_init(void)
 	GPIO_LED_CONFIG(LERBIT_APPLE_LEDS_4_PIN_NO);
 }
 
+void value_to_string(uint8_t *str, uint8_t value)
+{
+  uint8_t temp_value;
+
+  temp_value = value >> 4;
+  if (temp_value > 9)
+    str[0] = (temp_value - 10) + 'A';
+  else
+    str[0] = temp_value + '0';
+
+  temp_value = value & 0x0F;
+  if (temp_value > 9)
+    str[1] = (temp_value - 10) + 'A';
+  else
+    str[1] = temp_value + '0';
+}
+
+void lerbit_disp_strcopy(uint8_t *str_buf, const uint8_t *str_data, int len)
+{
+  if (len > 0 && len < 21)
+    while(len--) { 
+      str_buf[len] = str_data[len];
+    }
+}
+
 int main(void)
 {
   uint8_t data;
 	unsigned int loop = 3000000; // about 1s
+	uint8_t disp_buff[20] = {0};
 		
 	twi_master_init();
 	spi_master_init(SPI0, SPI_MODE3, 0);
@@ -253,21 +278,38 @@ int main(void)
 
 	nrf_gpio_pin_set(LERBIT_APPLE_PWRO_PIN_NO); /* set PWRO */
 	
-	lerbit_oled_showstring(0, 0 * 16, (const uint8_t *)"0123456789ABCDEF");
+  /* lerbit_oled_showstring(0, 0 * 16, (const uint8_t *)"0123456789ABCDEF");
   lerbit_oled_showstring(0, 1 * 16, (const uint8_t *)"1123456789ABCDEF");
-  lerbit_oled_refresh_gram(); 
+  lerbit_oled_refresh_gram(); */
 
+  lerbit_oled_clear();
 		
-  data = 0x00;
-  lerbit_acc_reg_write(0x31, data);
-  data = 0x08;
-  lerbit_acc_reg_write(0x2C, data);
-  data = 0x08;
-  lerbit_acc_reg_write(0x2D, data);
-  data = 0x80;
-  lerbit_acc_reg_write(0x2E, data);
+  lerbit_acc_reg_write(0x31, 0x00);
+  lerbit_acc_reg_write(0x2C, 0x08);
+  lerbit_acc_reg_write(0x2D, 0x08);
+  lerbit_acc_reg_write(0x2E, 0x80); // ENABLE DATA_READY INTERRUPT.
+
 
   lerbit_acc_reg_read(0x00, &data);
 
-  while(1) {}
+  lerbit_disp_strcopy(disp_buff, "DeviceID:   ", 13);
+  value_to_string(&disp_buff[10], data);
+  lerbit_oled_showstring(0, 0 * 16, (const uint8_t *)disp_buff);
+
+  while(1) {
+    data = 0;
+    lerbit_disp_strcopy(disp_buff, "X:     ,Y:     ", 16);
+    lerbit_acc_reg_read(0x32, &data); /* X */
+    value_to_string(&disp_buff[5], data);
+    lerbit_acc_reg_read(0x33, &data);
+    value_to_string(&disp_buff[3], data);
+    lerbit_acc_reg_read(0x34, &data); /* Y */
+    value_to_string(&disp_buff[13], data);
+    lerbit_acc_reg_read(0x35, &data);
+    value_to_string(&disp_buff[11], data);
+    lerbit_oled_showstring(0, 1 * 16, (const uint8_t *)disp_buff);
+    lerbit_oled_refresh_gram(); 
+  }
+
+  /* while(1) {} */
 }
