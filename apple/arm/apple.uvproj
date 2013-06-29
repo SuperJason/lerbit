@@ -411,6 +411,11 @@
               <FileType>1</FileType>
               <FilePath>..\SourceCode\apple.c</FilePath>
             </File>
+            <File>
+              <FileName>lerbit_ped.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SourceCode\lerbit_ped.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -428,6 +433,21 @@
               <FileName>twi_hw_master.c</FileName>
               <FileType>1</FileType>
               <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\twi_master\twi_hw_master.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\app_common\app_timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_button.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\app_common\app_button.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_gpiote.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\app_common\app_gpiote.c</FilePath>
             </File>
           </Files>
         </Group>

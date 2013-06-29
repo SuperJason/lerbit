@@ -1,8 +1,14 @@
+#include <stdio.h>
 #include "spi_master.h"
 #include "twi_master.h"
 #include "nrf_gpio.h"
 #include "lerbit_oled.h"
 #include "app_util.h"
+#include "app_timer.h"
+#include "app_gpiote.h" /* app_button use this module */
+#include "app_button.h"
+#include "nordic_common.h" /* UNUSED_PARAMETER */
+#include "lerbit_ped.h"
 
 #define LERBIT_OLED_RES_PIN 8
 #define LERBIT_OLED_I2C_ADDR 0x78
@@ -15,9 +21,49 @@
 #define LERBIT_APPLE_LEDS_3_PIN_NO 30
 #define LERBIT_APPLE_LEDS_4_PIN_NO 0
 
+/* Timer */
+#define APP_TIMER_PRESCALER               0    /**< Value of the RTC1 PRESCALER register. */
+#define APP_TIMER_MAX_TIMERS              6    /**< Maximum number of simultaneously created timers. */
+#define APP_TIMER_OP_QUEUE_SIZE           4    /**< Size of timer operation queues. */
 
+#define ACC_TIMER_INTERVAL                APP_TIMER_TICKS(40, APP_TIMER_PRESCALER)        /**< Acc sensor timer interval (ticks). */
 
+static app_timer_id_t                     m_acc_timer_id;   /**< Acc sensor timer. */
+
+typedef enum {
+    LERBIT_SYS_DIS_INIT,
+    LERBIT_SYS_DIS_UPDATE,
+    LERBIT_SYS_IDLE 
+} lerbit_sys_status_t;
+
+static lerbit_sys_status_t lerbit_sys_status = LERBIT_SYS_DIS_INIT;
 uint8_t lerbit_oled_gram[128][4]; /* 128 * 32 */
+
+/**@brief Error handler function, which is called when an error has occurred. 
+ *
+ * @warning This handler is an example only and does not fit a final product. You need to analyze 
+ *          how your product is supposed to react in case of error.
+ *
+ * @param[in] error_code  Error code supplied to the handler.
+ * @param[in] line_num    Line number where the handler is called.
+ * @param[in] p_file_name Pointer to the file name. 
+ */
+void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
+{
+  /* ?? */
+
+  // This call can be used for debug purposes during development of an application.
+  // @note CAUTION: Activating this code will write the stack to flash on an error.
+  //                This function should NOT be used in a final product.
+  //                It is intended STRICTLY for development/debugging purposes.
+  //                The flash write will happen EVEN if the radio is active, thus interrupting
+  //                any communication.
+  //                Use with care. Un-comment the line below to use.
+  // ble_debug_assert_handler(error_code, line_num, p_file_name);
+
+  // On assert, the system can only recover on reset
+  NVIC_SystemReset();
+}
 
 void lerbit_oled_write_command(uint8_t cmd)
 {
@@ -142,6 +188,31 @@ void lerbit_oled_showstring(uint8_t x, uint8_t y, const uint8_t *p)
     }  
 }	   
 
+void value_to_string(uint8_t *str, uint8_t value)
+{
+  uint8_t temp_value;
+
+  temp_value = value >> 4;
+  if (temp_value > 9)
+    str[0] = (temp_value - 10) + 'A';
+  else
+    str[0] = temp_value + '0';
+
+  temp_value = value & 0x0F;
+  if (temp_value > 9)
+    str[1] = (temp_value - 10) + 'A';
+  else
+    str[1] = temp_value + '0';
+}
+
+void lerbit_disp_strcopy(uint8_t *str_buf, const uint8_t *str_data, int len)
+{
+  if (len > 0 && len < 21)
+    while(len--) { 
+      str_buf[len] = str_data[len];
+    }
+}
+
 void lerbit_oled_init(void)
 {
 
@@ -192,6 +263,61 @@ void lerbit_acc_reg_write(uint8_t reg_addr, uint8_t reg_value)
   spi_master_tx_rx((uint32_t *)NRF_SPI0, 2, spi_tx_data, spi_rx_data);	
 }
 
+/*
+static void buttons_init(void)
+{
+  static app_button_cfg_t buttons[] =
+  {
+    {LERBIT_CHERRY_BUTTON_PIN_NO,           false, NRF_GPIO_PIN_PULLUP, button_event_handler}
+  };
+
+  APP_BUTTON_INIT(buttons, sizeof(buttons) / sizeof(buttons[0]), BUTTON_DETECTION_DELAY, false);
+}
+*/
+
+static void acc_timer_timeout_handler(void * p_context)
+{
+  uint8_t data;
+  int16_t acc_data_X, acc_data_Y;
+
+  UNUSED_PARAMETER(p_context);
+  if (lerbit_sys_status == LERBIT_SYS_IDLE) {
+    lerbit_sys_status = LERBIT_SYS_DIS_UPDATE;
+
+    lerbit_acc_reg_read(0x32, &data); /* X */
+    acc_data_X = data;
+    lerbit_acc_reg_read(0x33, &data);
+    acc_data_X |= data << 8;
+
+    lerbit_acc_reg_read(0x34, &data); /* Y */
+    acc_data_Y = data;
+    lerbit_acc_reg_read(0x35, &data);
+    acc_data_Y |= data << 8;
+
+    lerbit_ped_monitor(acc_data_X, acc_data_Y);
+  }
+}
+
+
+static void timers_init(void)
+{
+  uint32_t err_code;
+
+  // Initialize timer module
+  APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
+
+  // Create battery timer
+  err_code = app_timer_create(&m_acc_timer_id,
+      APP_TIMER_MODE_REPEATED,
+      acc_timer_timeout_handler);
+  APP_ERROR_CHECK(err_code);
+
+  // Start Acc timer
+  err_code = app_timer_start(m_acc_timer_id, ACC_TIMER_INTERVAL, NULL);
+  APP_ERROR_CHECK(err_code);
+}
+
+
 static void leds_init(void)
 {
 	GPIO_LED_CONFIG(LERBIT_APPLE_PWRO_PIN_NO); /* PWRO */
@@ -202,41 +328,22 @@ static void leds_init(void)
 	GPIO_LED_CONFIG(LERBIT_APPLE_LEDS_4_PIN_NO);
 }
 
-void value_to_string(uint8_t *str, uint8_t value)
-{
-  uint8_t temp_value;
-
-  temp_value = value >> 4;
-  if (temp_value > 9)
-    str[0] = (temp_value - 10) + 'A';
-  else
-    str[0] = temp_value + '0';
-
-  temp_value = value & 0x0F;
-  if (temp_value > 9)
-    str[1] = (temp_value - 10) + 'A';
-  else
-    str[1] = temp_value + '0';
-}
-
-void lerbit_disp_strcopy(uint8_t *str_buf, const uint8_t *str_data, int len)
-{
-  if (len > 0 && len < 21)
-    while(len--) { 
-      str_buf[len] = str_data[len];
-    }
-}
-
 int main(void)
 {
-  uint8_t data;
+  uint8_t data = 0, disp_count = 0;
 	unsigned int loop = 3000000; // about 1s
 	uint8_t disp_buff[20] = {0};
 		
 	twi_master_init();
 	spi_master_init(SPI0, SPI_MODE3, 0);
+  timers_init();
+
+  /* Start Clock */
+  NRF_CLOCK->LFCLKSRC = 1;
+  NRF_CLOCK->TASKS_LFCLKSTART = 1;
 	
 	leds_init();
+  lerbit_ped_init();
 	
 	/* OLED RESET */
 	nrf_gpio_pin_set(LERBIT_OLED_RES_PIN);
@@ -278,10 +385,6 @@ int main(void)
 
 	nrf_gpio_pin_set(LERBIT_APPLE_PWRO_PIN_NO); /* set PWRO */
 	
-  /* lerbit_oled_showstring(0, 0 * 16, (const uint8_t *)"0123456789ABCDEF");
-  lerbit_oled_showstring(0, 1 * 16, (const uint8_t *)"1123456789ABCDEF");
-  lerbit_oled_refresh_gram(); */
-
   lerbit_oled_clear();
 		
   lerbit_acc_reg_write(0x31, 0x00);
@@ -289,26 +392,32 @@ int main(void)
   lerbit_acc_reg_write(0x2D, 0x08);
   lerbit_acc_reg_write(0x2E, 0x80); // ENABLE DATA_READY INTERRUPT.
 
-
-  lerbit_acc_reg_read(0x00, &data);
-
-  lerbit_disp_strcopy(disp_buff, "DeviceID:   ", 13);
-  value_to_string(&disp_buff[10], data);
-  lerbit_oled_showstring(0, 0 * 16, (const uint8_t *)disp_buff);
+  lerbit_sys_status = LERBIT_SYS_IDLE;
 
   while(1) {
-    data = 0;
-    lerbit_disp_strcopy(disp_buff, "X:     ,Y:     ", 16);
-    lerbit_acc_reg_read(0x32, &data); /* X */
-    value_to_string(&disp_buff[5], data);
-    lerbit_acc_reg_read(0x33, &data);
-    value_to_string(&disp_buff[3], data);
-    lerbit_acc_reg_read(0x34, &data); /* Y */
-    value_to_string(&disp_buff[13], data);
-    lerbit_acc_reg_read(0x35, &data);
-    value_to_string(&disp_buff[11], data);
-    lerbit_oled_showstring(0, 1 * 16, (const uint8_t *)disp_buff);
-    lerbit_oled_refresh_gram(); 
+    if(lerbit_sys_status == LERBIT_SYS_DIS_UPDATE) {
+      lerbit_sys_status = LERBIT_SYS_IDLE;
+      lerbit_acc_reg_read(0x00, &data);
+      sprintf((char *)disp_buff, "DeviceId: %02X %02X", data, disp_count++);
+      /*
+      lerbit_disp_strcopy(disp_buff, "DeviceID:      ", 16);
+      value_to_string(&disp_buff[10], data);
+      value_to_string(&disp_buff[14], disp_count++);
+      */
+      lerbit_oled_showstring(0, 0 * 16, (const uint8_t *)disp_buff);
+      data = 0;
+      lerbit_disp_strcopy(disp_buff, "X:     ,Y:     ", 16);
+      lerbit_acc_reg_read(0x32, &data); /* X */
+      value_to_string(&disp_buff[5], data);
+      lerbit_acc_reg_read(0x33, &data);
+      value_to_string(&disp_buff[3], data);
+      lerbit_acc_reg_read(0x34, &data); /* Y */
+      value_to_string(&disp_buff[13], data);
+      lerbit_acc_reg_read(0x35, &data);
+      value_to_string(&disp_buff[11], data);
+      lerbit_oled_showstring(0, 1 * 16, (const uint8_t *)disp_buff);
+      lerbit_oled_refresh_gram(); 
+    }
   }
 
   /* while(1) {} */
