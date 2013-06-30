@@ -10,25 +10,28 @@
 #include "nordic_common.h" /* UNUSED_PARAMETER */
 #include "lerbit_ped.h"
 
+/* Oled */
 #define LERBIT_OLED_RES_PIN 8
 #define LERBIT_OLED_I2C_ADDR 0x78
 #define LERBIT_OLED_W (LERBIT_OLED_I2C_ADDR)
 #define LERBIT_OLED_R (LERBIT_OLED_I2C_ADDR | TWI_READ_BIT)
-
+/* PWR */
 #define LERBIT_APPLE_PWRO_PIN_NO 1
+/* Led */
 #define LERBIT_APPLE_LEDS_1_PIN_NO 28
 #define LERBIT_APPLE_LEDS_2_PIN_NO 29
 #define LERBIT_APPLE_LEDS_3_PIN_NO 30
 #define LERBIT_APPLE_LEDS_4_PIN_NO 0
-
 /* Timer */
 #define APP_TIMER_PRESCALER               0    /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_MAX_TIMERS              6    /**< Maximum number of simultaneously created timers. */
 #define APP_TIMER_OP_QUEUE_SIZE           4    /**< Size of timer operation queues. */
-
-#define ACC_TIMER_INTERVAL                APP_TIMER_TICKS(40, APP_TIMER_PRESCALER)        /**< Acc sensor timer interval (ticks). */
-
+#define ACC_TIMER_INTERVAL                APP_TIMER_TICKS(40, APP_TIMER_PRESCALER)  /**< Acc sensor timer interval (ticks). */
 static app_timer_id_t                     m_acc_timer_id;   /**< Acc sensor timer. */
+/* Button */
+#define APP_GPIOTE_MAX_USERS              1    /**< Maximum number of users of the GPIOTE handler. */
+#define LERBIT_APPLE_BUTTON_PIN_NO 4
+#define BUTTON_DETECTION_DELAY            APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)  /**< Delay from a GPIOTE event until a button is reported as pushed (in number of timer ticks). */
 
 typedef enum {
     LERBIT_SYS_DIS_INIT,
@@ -263,17 +266,34 @@ void lerbit_acc_reg_write(uint8_t reg_addr, uint8_t reg_value)
   spi_master_tx_rx((uint32_t *)NRF_SPI0, 2, spi_tx_data, spi_rx_data);	
 }
 
-/*
+static void gpiote_init(void)
+{
+    APP_GPIOTE_INIT(APP_GPIOTE_MAX_USERS);
+}
+
+static void button_event_handler(uint8_t pin_no)
+{
+  switch (pin_no)
+  {
+    case LERBIT_APPLE_BUTTON_PIN_NO:
+      lerbit_ped_init();
+      lerbit_sys_status = LERBIT_SYS_DIS_UPDATE;
+      break;
+
+    default:
+      APP_ERROR_HANDLER(pin_no);
+  }
+}
+
 static void buttons_init(void)
 {
   static app_button_cfg_t buttons[] =
   {
-    {LERBIT_CHERRY_BUTTON_PIN_NO,           false, NRF_GPIO_PIN_PULLUP, button_event_handler}
+    {LERBIT_APPLE_BUTTON_PIN_NO,           false, NRF_GPIO_PIN_PULLUP, button_event_handler}
   };
 
   APP_BUTTON_INIT(buttons, sizeof(buttons) / sizeof(buttons[0]), BUTTON_DETECTION_DELAY, false);
 }
-*/
 
 static void acc_timer_timeout_handler(void * p_context)
 {
@@ -282,7 +302,6 @@ static void acc_timer_timeout_handler(void * p_context)
 
   UNUSED_PARAMETER(p_context);
   if (lerbit_sys_status == LERBIT_SYS_IDLE) {
-    lerbit_sys_status = LERBIT_SYS_DIS_UPDATE;
 
     lerbit_acc_reg_read(0x32, &data); /* X */
     acc_data_X = data;
@@ -294,7 +313,9 @@ static void acc_timer_timeout_handler(void * p_context)
     lerbit_acc_reg_read(0x35, &data);
     acc_data_Y |= data << 8;
 
-    lerbit_ped_monitor(acc_data_X, acc_data_Y);
+    if (lerbit_ped_monitor(acc_data_X, acc_data_Y)) {
+      lerbit_sys_status = LERBIT_SYS_DIS_UPDATE;
+    }
   }
 }
 
@@ -330,20 +351,22 @@ static void leds_init(void)
 
 int main(void)
 {
-  uint8_t data = 0, disp_count = 0;
+  uint8_t data = 0;
 	unsigned int loop = 3000000; // about 1s
 	uint8_t disp_buff[20] = {0};
 		
 	twi_master_init();
 	spi_master_init(SPI0, SPI_MODE3, 0);
   timers_init();
+  gpiote_init();
+  buttons_init();
+
+	leds_init();
+  lerbit_ped_init();
 
   /* Start Clock */
   NRF_CLOCK->LFCLKSRC = 1;
   NRF_CLOCK->TASKS_LFCLKSTART = 1;
-	
-	leds_init();
-  lerbit_ped_init();
 	
 	/* OLED RESET */
 	nrf_gpio_pin_set(LERBIT_OLED_RES_PIN);
@@ -392,29 +415,19 @@ int main(void)
   lerbit_acc_reg_write(0x2D, 0x08);
   lerbit_acc_reg_write(0x2E, 0x80); // ENABLE DATA_READY INTERRUPT.
 
+  lerbit_oled_showstring(0, 0 * 16, "Dist:");
+  lerbit_oled_showstring(0, 1 * 16, "Step:");
+  lerbit_oled_refresh_gram(); 
+
   lerbit_sys_status = LERBIT_SYS_IDLE;
 
   while(1) {
     if(lerbit_sys_status == LERBIT_SYS_DIS_UPDATE) {
       lerbit_sys_status = LERBIT_SYS_IDLE;
       lerbit_acc_reg_read(0x00, &data);
-      sprintf((char *)disp_buff, "DeviceId: %02X %02X", data, disp_count++);
-      /*
-      lerbit_disp_strcopy(disp_buff, "DeviceID:      ", 16);
-      value_to_string(&disp_buff[10], data);
-      value_to_string(&disp_buff[14], disp_count++);
-      */
+      sprintf((char *)disp_buff, "Dist: %.1f", lerbit_ped_get_distance());
       lerbit_oled_showstring(0, 0 * 16, (const uint8_t *)disp_buff);
-      data = 0;
-      lerbit_disp_strcopy(disp_buff, "X:     ,Y:     ", 16);
-      lerbit_acc_reg_read(0x32, &data); /* X */
-      value_to_string(&disp_buff[5], data);
-      lerbit_acc_reg_read(0x33, &data);
-      value_to_string(&disp_buff[3], data);
-      lerbit_acc_reg_read(0x34, &data); /* Y */
-      value_to_string(&disp_buff[13], data);
-      lerbit_acc_reg_read(0x35, &data);
-      value_to_string(&disp_buff[11], data);
+      sprintf((char *)disp_buff, "Step: %d", lerbit_ped_get_steps());
       lerbit_oled_showstring(0, 1 * 16, (const uint8_t *)disp_buff);
       lerbit_oled_refresh_gram(); 
     }

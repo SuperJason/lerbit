@@ -5,7 +5,7 @@ static uint32_t lerbit_ped_steps;
 static float lerbit_ped_distance;
 
 char stepflag;
-float stride, avgstride, accel_dat[500];
+float stride, avgstride, accel_dat[50];
 float maxavg, minavg, accel_avg, velocity, displace;
 float distance;
 int steps;
@@ -20,7 +20,7 @@ uint32_t lerbit_ped_get_steps(void)
   return lerbit_ped_steps;
 }
 
-uint32_t lerbit_ped_get_distance(void)
+float lerbit_ped_get_distance(void)
 {
   return lerbit_ped_distance;
 }
@@ -83,9 +83,9 @@ int8_t IsStep(float avg, float oldavg)
   return 0;
 }
 
-void lerbit_ped_monitor(lerbit_ped_acc_data_t ped_data_X, lerbit_ped_acc_data_t ped_data_Y)
+uint32_t lerbit_ped_monitor(lerbit_ped_acc_data_t ped_data_X, lerbit_ped_acc_data_t ped_data_Y)
 {
-  int32_t i;
+  int32_t i, re_value = 0;
 
   if (ped_data_X < 0)
     ped_data_X = -ped_data_X;
@@ -145,7 +145,8 @@ void lerbit_ped_monitor(lerbit_ped_acc_data_t ped_data_X, lerbit_ped_acc_data_t 
       lerbit_ped_steps = steps;
       distance += avgstride;
       /* global_distance = distance*30.48; */
-      lerbit_ped_distance = distance*30.48;
+      lerbit_ped_distance = distance;
+      re_value = 1;
       // need all data used in calculating newavg
       for (i = 0; i < avglen; i++)
         accel_dat[i] = accel_dat[cycle_count + i - avglen];
@@ -159,4 +160,18 @@ void lerbit_ped_monitor(lerbit_ped_acc_data_t ped_data_X, lerbit_ped_acc_data_t 
       displace = 0;
     } // we have a new step
   } // enough samples to start checking for step (need at least 8)
+
+  if (cycle_count >= 50) {
+    newmax = -10000.0;
+    newmin = 10000.0;
+    for (i = 0; i < avglen; i++) {
+      accel_dat[i] = accel_dat[cycle_count + i - avglen];
+      if (rssdat > newmax)
+        newmax = rssdat;
+      if (rssdat < newmin)
+        newmin = rssdat;
+    }
+      cycle_count = avglen;
+  }
+  return(re_value);
 }
