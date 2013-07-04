@@ -34,13 +34,22 @@ static app_timer_id_t                     m_acc_timer_id;   /**< Acc sensor time
 #define BUTTON_DETECTION_DELAY            APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)  /**< Delay from a GPIOTE event until a button is reported as pushed (in number of timer ticks). */
 
 typedef enum {
-    LERBIT_SYS_DIS_INIT,
+    LERBIT_SYS_INIT,
     LERBIT_SYS_DIS_UPDATE,
     LERBIT_SYS_IDLE 
 } lerbit_sys_status_t;
 
-static lerbit_sys_status_t lerbit_sys_status = LERBIT_SYS_DIS_INIT;
+typedef enum {
+    LERBIT_DISPLAY_PED,
+    LERBIT_DISPLAY_TIME,
+    LERBIT_DISPLAY_IDLE 
+} lerbit_display_t;
+
+static lerbit_sys_status_t lerbit_sys_status = LERBIT_SYS_INIT;
+static lerbit_display_t lerbit_display_status = LERBIT_DISPLAY_PED;
 uint8_t lerbit_oled_gram[128][4]; /* 128 * 32 */
+uint8_t lerbit_time_hour = 0, lerbit_time_minute = 0, lerbit_time_second = 0;
+uint32_t lerbit_time_subsec = 0;
 
 /**@brief Error handler function, which is called when an error has occurred. 
  *
@@ -297,24 +306,67 @@ static void buttons_init(void)
 
 static void acc_timer_timeout_handler(void * p_context)
 {
+  static uint8_t display_swith_cnt = 0;
   uint8_t data;
   int16_t acc_data_X, acc_data_Y;
 
   UNUSED_PARAMETER(p_context);
-  if (lerbit_sys_status == LERBIT_SYS_IDLE) {
 
-    lerbit_acc_reg_read(0x32, &data); /* X */
-    acc_data_X = data;
-    lerbit_acc_reg_read(0x33, &data);
-    acc_data_X |= data << 8;
+  lerbit_acc_reg_read(0x32, &data); /* X */
+  acc_data_X = data;
+  lerbit_acc_reg_read(0x33, &data);
+  acc_data_X |= data << 8;
 
-    lerbit_acc_reg_read(0x34, &data); /* Y */
-    acc_data_Y = data;
-    lerbit_acc_reg_read(0x35, &data);
-    acc_data_Y |= data << 8;
+  lerbit_acc_reg_read(0x34, &data); /* Y */
+  acc_data_Y = data;
+  lerbit_acc_reg_read(0x35, &data);
+  acc_data_Y |= data << 8;
 
-    if (lerbit_ped_monitor(acc_data_X, acc_data_Y)) {
+  if (++lerbit_time_subsec >= 25) {
+    lerbit_time_subsec = 0;
+    if (++lerbit_time_second >= 60) {
+      lerbit_time_second = 0;
+      if (++lerbit_time_minute >= 60) {
+        lerbit_time_minute = 0;
+        if (++lerbit_time_hour >= 24) {
+          lerbit_time_hour = 0;
+          /* days update */
+        }
+      }
+    }
+  }
+  if (lerbit_ped_monitor(acc_data_X, acc_data_Y)) {
+    if (lerbit_sys_status == LERBIT_SYS_IDLE) {
       lerbit_sys_status = LERBIT_SYS_DIS_UPDATE;
+    }
+  }
+
+  display_swith_cnt++;
+  if (lerbit_display_status == LERBIT_DISPLAY_PED) {
+    if (display_swith_cnt > 125) {/* 5s */
+      display_swith_cnt = 0;
+      lerbit_display_status = LERBIT_DISPLAY_TIME;
+      if (lerbit_sys_status == LERBIT_SYS_IDLE) {
+        lerbit_sys_status = LERBIT_SYS_DIS_UPDATE;
+      }
+    }
+  }
+  if (lerbit_display_status == LERBIT_DISPLAY_TIME) {
+    if (display_swith_cnt > 25) {/* 1s */
+      display_swith_cnt = 0;
+      lerbit_display_status = LERBIT_DISPLAY_IDLE;
+      if (lerbit_sys_status == LERBIT_SYS_IDLE) {
+        lerbit_sys_status = LERBIT_SYS_DIS_UPDATE;
+      }
+    }
+  }
+  if (lerbit_display_status == LERBIT_DISPLAY_IDLE) {
+    if (display_swith_cnt > 25) {/* 1s */
+      display_swith_cnt = 0;
+      lerbit_display_status = LERBIT_DISPLAY_PED;
+      if (lerbit_sys_status == LERBIT_SYS_IDLE) {
+        lerbit_sys_status = LERBIT_SYS_DIS_UPDATE;
+      }
     }
   }
 }
@@ -415,20 +467,31 @@ int main(void)
   lerbit_acc_reg_write(0x2D, 0x08);
   lerbit_acc_reg_write(0x2E, 0x80); // ENABLE DATA_READY INTERRUPT.
 
-  lerbit_oled_showstring(0, 0 * 16, "Dist:");
-  lerbit_oled_showstring(0, 1 * 16, "Step:");
+  lerbit_oled_showstring(0, 0 * 16, (const uint8_t *)"Dist:");
+  lerbit_oled_showstring(0, 1 * 16, (const uint8_t *)"Step:");
   lerbit_oled_refresh_gram(); 
 
   lerbit_sys_status = LERBIT_SYS_IDLE;
 
   while(1) {
-    if(lerbit_sys_status == LERBIT_SYS_DIS_UPDATE) {
+    if (lerbit_sys_status == LERBIT_SYS_DIS_UPDATE) {
+      lerbit_oled_clear();
+      switch (lerbit_display_status) {
+        case LERBIT_DISPLAY_PED:
+          lerbit_acc_reg_read(0x00, &data);
+          sprintf((char *)disp_buff, "Dist: %.1f", lerbit_ped_get_distance());
+          lerbit_oled_showstring(0, 0 * 16, (const uint8_t *)disp_buff);
+          sprintf((char *)disp_buff, "Step: %d", lerbit_ped_get_steps());
+          lerbit_oled_showstring(0, 1 * 16, (const uint8_t *)disp_buff);
+          break;
+        case LERBIT_DISPLAY_TIME:
+          sprintf((char *)disp_buff, "%2d:%02d:%02d", lerbit_time_hour, lerbit_time_minute, lerbit_time_second);
+          lerbit_oled_showstring(32, 8, (const uint8_t *)disp_buff);
+          break;
+        default:
+					break;
+      }
       lerbit_sys_status = LERBIT_SYS_IDLE;
-      lerbit_acc_reg_read(0x00, &data);
-      sprintf((char *)disp_buff, "Dist: %.1f", lerbit_ped_get_distance());
-      lerbit_oled_showstring(0, 0 * 16, (const uint8_t *)disp_buff);
-      sprintf((char *)disp_buff, "Step: %d", lerbit_ped_get_steps());
-      lerbit_oled_showstring(0, 1 * 16, (const uint8_t *)disp_buff);
       lerbit_oled_refresh_gram(); 
     }
   }
