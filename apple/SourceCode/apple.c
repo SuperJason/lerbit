@@ -354,12 +354,17 @@ static void acc_timer_timeout_handler(void * p_context)
   if (lerbit_display_status == LERBIT_DISPLAY_TIME) {
     if (display_swith_cnt > 25) {/* 1s */
       display_swith_cnt = 0;
+#if 0
       lerbit_display_status = LERBIT_DISPLAY_IDLE;
+#else
+      lerbit_display_status = LERBIT_DISPLAY_PED;
+#endif
       if (lerbit_sys_status == LERBIT_SYS_IDLE) {
         lerbit_sys_status = LERBIT_SYS_DIS_UPDATE;
       }
     }
   }
+#if 0
   if (lerbit_display_status == LERBIT_DISPLAY_IDLE) {
     if (display_swith_cnt > 25) {/* 1s */
       display_swith_cnt = 0;
@@ -369,6 +374,7 @@ static void acc_timer_timeout_handler(void * p_context)
       }
     }
   }
+#endif
 }
 
 
