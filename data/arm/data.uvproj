@@ -350,7 +350,7 @@
               <MiscControls>--c99</MiscControls>
               <Define>NRF51,DEBUG_NRF_USER</Define>
               <Undefine></Undefine>
-              <IncludePath>..;..\..\..\..\..\Include;..\..\..\..\..\Include\app_common;..\..\..\..\..\Include\ble;..\..\..\..\..\Include\ble\ble_services;..\..\..\..\..\Include\ble\softdevice</IncludePath>
+              <IncludePath>..;..\Include;..\Include\app_common;..\Include\ble;..\Include\ble\ble_services;..\Include\ble\softdevice;..\SourceCode</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -392,14 +392,14 @@
           <GroupName>Startup Code</GroupName>
           <Files>
             <File>
-              <FileName>arm_startup_nrf51.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>.\..\..\..\..\..\Source\templates\arm\arm_startup_nrf51.s</FilePath>
-            </File>
-            <File>
               <FileName>system_nrf51.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\..\..\..\..\..\Source\templates\system_nrf51.c</FilePath>
+              <FilePath>..\SetupCode\system_nrf51.c</FilePath>
+            </File>
+            <File>
+              <FileName>arm_startup_nrf51.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\SetupCode\arm_startup_nrf51.s</FilePath>
             </File>
           </Files>
         </Group>
@@ -407,9 +407,9 @@
           <GroupName>Source Code</GroupName>
           <Files>
             <File>
-              <FileName>main.c</FileName>
+              <FileName>data.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\..\main.c</FilePath>
+              <FilePath>..\SourceCode\data.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -417,19 +417,19 @@
           <GroupName>Services</GroupName>
           <Files>
             <File>
-              <FileName>ble_dis.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_services\ble_dis.c</FilePath>
-            </File>
-            <File>
               <FileName>ble_bas.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_services\ble_bas.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_dis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_dis.c</FilePath>
             </File>
             <File>
               <FileName>ble_hts.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_services\ble_hts.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_hts.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -439,67 +439,67 @@
             <File>
               <FileName>ble_advdata.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_advdata.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_advdata.c</FilePath>
             </File>
             <File>
               <FileName>ble_srv_common.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_services\ble_srv_common.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_srv_common.c</FilePath>
             </File>
             <File>
               <FileName>ble_sensorsim.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_sensorsim.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_sensorsim.c</FilePath>
             </File>
             <File>
               <FileName>app_timer.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\app_common\app_timer.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\app_common\app_timer.c</FilePath>
             </File>
             <File>
               <FileName>ble_stack_handler.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_stack_handler.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_stack_handler.c</FilePath>
             </File>
             <File>
               <FileName>ble_conn_params.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_conn_params.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_conn_params.c</FilePath>
             </File>
             <File>
               <FileName>ble_bondmngr.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_bondmngr.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_bondmngr.c</FilePath>
             </File>
             <File>
               <FileName>ble_flash.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_flash.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_flash.c</FilePath>
             </File>
             <File>
               <FileName>app_button.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\app_common\app_button.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\app_common\app_button.c</FilePath>
             </File>
             <File>
               <FileName>ble_error_log.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_error_log.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_error_log.c</FilePath>
             </File>
             <File>
               <FileName>ble_radio_notification.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_radio_notification.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_radio_notification.c</FilePath>
             </File>
             <File>
               <FileName>app_gpiote.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\app_common\app_gpiote.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\app_common\app_gpiote.c</FilePath>
             </File>
             <File>
               <FileName>ble_debug_assert_handler.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_debug_assert_handler.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_debug_assert_handler.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -891,14 +891,14 @@
           <GroupName>Startup Code</GroupName>
           <Files>
             <File>
-              <FileName>arm_startup_nrf51.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>.\..\..\..\..\..\Source\templates\arm\arm_startup_nrf51.s</FilePath>
-            </File>
-            <File>
               <FileName>system_nrf51.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\..\..\..\..\..\Source\templates\system_nrf51.c</FilePath>
+              <FilePath>..\SetupCode\system_nrf51.c</FilePath>
+            </File>
+            <File>
+              <FileName>arm_startup_nrf51.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\SetupCode\arm_startup_nrf51.s</FilePath>
             </File>
           </Files>
         </Group>
@@ -906,9 +906,9 @@
           <GroupName>Source Code</GroupName>
           <Files>
             <File>
-              <FileName>main.c</FileName>
+              <FileName>data.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\..\main.c</FilePath>
+              <FilePath>..\SourceCode\data.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -916,19 +916,19 @@
           <GroupName>Services</GroupName>
           <Files>
             <File>
-              <FileName>ble_dis.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_services\ble_dis.c</FilePath>
-            </File>
-            <File>
               <FileName>ble_bas.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_services\ble_bas.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_dis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_dis.c</FilePath>
             </File>
             <File>
               <FileName>ble_hts.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_services\ble_hts.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_hts.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -938,67 +938,67 @@
             <File>
               <FileName>ble_advdata.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_advdata.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_advdata.c</FilePath>
             </File>
             <File>
               <FileName>ble_srv_common.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_services\ble_srv_common.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_services\ble_srv_common.c</FilePath>
             </File>
             <File>
               <FileName>ble_sensorsim.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_sensorsim.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_sensorsim.c</FilePath>
             </File>
             <File>
               <FileName>app_timer.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\app_common\app_timer.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\app_common\app_timer.c</FilePath>
             </File>
             <File>
               <FileName>ble_stack_handler.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_stack_handler.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_stack_handler.c</FilePath>
             </File>
             <File>
               <FileName>ble_conn_params.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_conn_params.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_conn_params.c</FilePath>
             </File>
             <File>
               <FileName>ble_bondmngr.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_bondmngr.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_bondmngr.c</FilePath>
             </File>
             <File>
               <FileName>ble_flash.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_flash.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_flash.c</FilePath>
             </File>
             <File>
               <FileName>app_button.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\app_common\app_button.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\app_common\app_button.c</FilePath>
             </File>
             <File>
               <FileName>ble_error_log.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_error_log.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_error_log.c</FilePath>
             </File>
             <File>
               <FileName>ble_radio_notification.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_radio_notification.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_radio_notification.c</FilePath>
             </File>
             <File>
               <FileName>app_gpiote.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\app_common\app_gpiote.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\app_common\app_gpiote.c</FilePath>
             </File>
             <File>
               <FileName>ble_debug_assert_handler.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\Source\ble\ble_debug_assert_handler.c</FilePath>
+              <FilePath>C:\Keil\ARM\Device\Nordic\nrf51822\Source\ble\ble_debug_assert_handler.c</FilePath>
             </File>
           </Files>
         </Group>
